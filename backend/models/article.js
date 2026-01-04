@@ -1,11 +1,20 @@
-const mongoose = require("mongoose");
+const express = require("express");
+const router = express.Router();
+const { predictNews } = require("../services/mlService");
 
-module.exports = mongoose.model("Article",
-  new mongoose.Schema({
-    title: String,
-    content: String,
-    prediction: String,
-    confidence: Number,
-    user: mongoose.Schema.Types.ObjectId
-  })
-);
+router.post("/predict", async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    const result = await predictNews(text);
+
+    res.json({
+      prediction: result.prediction,
+      confidence: result.confidence
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Prediction failed" });
+  }
+});
+
+module.exports = router;

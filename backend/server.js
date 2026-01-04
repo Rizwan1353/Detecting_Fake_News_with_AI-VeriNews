@@ -3,12 +3,16 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const axios = require("axios");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({
+  path: path.join(__dirname, ".env"),
+});
+
+
 
 const User = require("./models/User");
-const Article = require("./models/Article");
 
+// ✅ INIT APP FIRST
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -55,32 +59,16 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 /* ==========================
-   ARTICLE CHECK ROUTE
+   NEWS PREDICTION ROUTE
 ========================== */
-app.post("/api/articles/check", auth, async (req, res) => {
-  const { title, content } = req.body;
-
-  // Call ML API
-  const mlRes = await axios.post("http://localhost:8000/predict", {
-    text: content
-  });
-
-  const article = await Article.create({
-    title,
-    content,
-    prediction: mlRes.data.result,
-    confidence: mlRes.data.confidence,
-    user: req.user.id
-  });
-
-  res.json(article);
-});
+app.use("/api/news", require("./models/article"));
 
 /* ==========================
    DATABASE + SERVER
 ========================== */
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+  .catch((err) => console.log(err));
 
 app.listen(5000, () => console.log("Server running on port 5000"));
